@@ -1,0 +1,190 @@
+---
+title: "Project3_DATA607_Top5_Bottom5"
+author: "Mahmud Hasan Al Raji &Ivan & Joyce Aldrich & Ariana "
+date: "2022-10-22"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#install new package
+```{r}
+install.packages("gcookbook")
+```
+
+```{r }
+library(readr)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(ggplot2)
+library(magrittr)
+library(gcookbook)
+library(forcats)
+```
+
+# Getting the data
+
+```{r }
+skills_data<-read.csv("https://raw.githubusercontent.com/Raji030/data_science_skills/main/ds_general_skills_revised.csv", sep=",",header = TRUE)
+
+skills_data
+
+glimpse(skills_data)
+```
+# Data Cleaning:
+
+```{r }
+
+#Removing empty rows 
+
+data_1<- skills_data[!apply(skills_data == "", 1, all),]
+data_1
+
+#Removing rows that have data redundancy
+
+data_2<-data_1[-(17:30),]
+data_2
+
+# Replacing skill names that have abbreviated parts in Keyword column 
+
+data_2$Keyword[data_2$Keyword == "AI composite"] <- "artificial intelligence"
+data_2$Keyword[data_2$Keyword == "NLP composite"] <- "natural language processing"
+data_2
+
+```
+
+# Data Transform- Convert the data from char to numeric / add another sum for each skill / remove total row 
+
+```{r}
+data_2$LinkedIn = as.numeric(gsub("[^[:digit:]]","",data_2$LinkedIn))
+data_2$Indeed = as.numeric(gsub("[^[:digit:]]","",data_2$Indeed))
+data_2$SimplyHired = as.numeric(gsub("[^[:digit:]]","",data_2$SimplyHired))
+data_2$Monster = as.numeric(gsub("[^[:digit:]]","",data_2$Monster))
+
+data_3 <- data_2 %>%
+  mutate(total_count = rowSums(across(where(is.numeric)))) 
+
+data_3 <- data_3[-c(16),]
+
+data_3<- data_3 %>%
+ rename(Data_Skills = Keyword)
+```
+
+# select top 5 & bottom 5 skills
+```{r}
+library(dbplyr)
+Top_5 <- data_3 %>%
+  #select(Data_Skills,total_count) %>%
+  slice_max(total_count, n=5)
+
+Bottom_5 <-data_3 %>%
+  #select(Data_Skills,total_count) %>%
+  slice_min(total_count,n=5)
+
+Top_Bottom <-rbind(Top_5,Bottom_5)
+```
+
+# Overall Top 5 & Bottom 5- Data Scientist Skills
+```{r}
+Top_Bottom_Overall <- Top_Bottom %>%
+mutate(Data_Skills = fct_reorder(Data_Skills, total_count)) %>%
+select (Data_Skills,total_count) %>%
+ggplot( aes(x=total_count,y=Data_Skills, fill=Data_Skills))+
+  geom_bar(stat='identity',width = 0.8,color='purple') + 
+  scale_fill_manual(values = c("red","red","red","red","red","green","green","green","green","green")) +
+  geom_text(aes(label=total_count),size =3)+
+  theme_minimal()+
+    ggtitle("Top 5 & Bottom 5- Overall Data Scientist Skills ") +
+      labs(y="Top5 & Bottom5 Skills", x="Overall Count")
+  
+Top_Bottom_Overall
+```
+
+# LinkedIn Top 5 & Bottom 5 Data Scientist Skills
+
+```{r}
+Top_Bottom_LinkedIn <- Top_Bottom %>%
+mutate(Data_Skills = fct_reorder(Data_Skills, LinkedIn)) %>%
+select (Data_Skills,LinkedIn) %>%
+ggplot( aes(x=LinkedIn,y=Data_Skills, fill=Data_Skills))+
+  geom_bar(stat='identity',width = 0.8,color='purple') + 
+  scale_fill_manual(values = c("red","red","red","red","red","green","green","green","green","green")) +
+  geom_text(aes(label=LinkedIn),size =3)+
+  theme_minimal()+
+    ggtitle("Top 5 & Bottom 5- LinkedIn Data Scientist Skills ") +
+      labs(y="Top5 & Bottom5 Skills", x="LinkedIn Count")
+
+Top_Bottom_LinkedIn
+```
+
+# Indeed Top 5 & Bottom 5  Data Scientist Skills
+
+```{r}
+Top_Bottom_Indeed <- Top_Bottom %>%
+mutate(Data_Skills = fct_reorder(Data_Skills, Indeed )) %>%
+select (Data_Skills,Indeed) %>%
+ggplot( aes(x=Indeed,y=Data_Skills, fill=Data_Skills))+
+  geom_bar(stat='identity',width = 0.8,color='purple') + 
+  scale_fill_manual(values = c("red","red","red","red","red","green","green","green","green","green")) +
+  geom_text(aes(label=Indeed),size =3)+
+  theme_minimal()+
+    ggtitle("Top 5 & Bottom 5- Indeed Data Scientist Skills") +
+      labs(y="Top5 & Bottom5 Skills", x="Indeed Count")
+
+Top_Bottom_Indeed
+```
+
+# SimplyHired Top 5 & Bottom 5  Data Scientist Skills
+
+```{r}
+Top_Bottom_SimplyHired <- Top_Bottom %>%
+mutate(Data_Skills = fct_reorder(Data_Skills, SimplyHired)) %>%
+select (Data_Skills,SimplyHired) %>%
+ggplot( aes(x=SimplyHired,y=Data_Skills, fill=Data_Skills))+
+  geom_bar(stat='identity',width = 0.8,color='purple') + 
+  scale_fill_manual(values = c("red","red","red","red","red","green","green","green","green","green")) +
+  geom_text(aes(label=SimplyHired),size =3)+
+  theme_minimal()+
+    ggtitle("Top 5 & Bottom 5- SimplyHired Data Scientist Skills") +
+      labs(y="Top5 & Bottom5 Skills", x="SimplyHired Count")
+
+Top_Bottom_SimplyHired
+```
+
+# Monster Top 5 & Bottom 5 Data Scientist Skills
+```{r}
+Top_Bottom_Monster <- Top_Bottom %>%
+mutate(Data_Skills = fct_reorder(Data_Skills, Monster)) %>%
+select (Data_Skills,Monster) %>%
+ggplot( aes(x=Monster,y=Data_Skills, fill=Data_Skills))+
+  geom_bar(stat='identity',width = 0.8,color='purple') + 
+  scale_fill_manual(values = c("red","red","red","red","red","green","green","green","green","green")) +
+  geom_text(aes(label=Monster),size =3)+
+  theme_minimal()+
+    ggtitle("Top 5 & Bottom 5- Monster Data Scientist Skills") +
+      labs(y="Top5 & Bottom5 Skills", x="Monster Count")
+
+Top_Bottom_Monster
+
+```
+# Analysis 
+```{r}
+Top_Bottom_Overall
+Top_Bottom_LinkedIn
+Top_Bottom_Indeed
+Top_Bottom_SimplyHired
+Top_Bottom_Monster
+```
+Analysis: 
+1. LinkedIn- Machine Learning skill is top one (1) and Software Engineering Skill is bottom one (1) compare to the overall skills.(total count almost twice size than SimplyHired)
+2. Indeed- Top five skills are overlapping to over skills order but bottom two is data engineering and than software engineering skill which opposite of overall skills' order. Top1 skill and Top2 skill's count are close to each other less than 100 count. 
+3. SimplyHired - Same as Indeed. 
+4. Monster- Top one skill is 37% increasing from the top two skill and Machine Learning skill dropped to Top three(3) and communication skill's order is higher than overall skills and others 3 job websites. Software engineering skill is bottom one (1) or bottom two (2) for overall skills or other job websites' skills but the order is the second of bottom 5 for Monster. 
+
+
+
+
+
